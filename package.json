@@ -1,0 +1,30 @@
+{
+	"name": "@itcig/action-deploy-gke",
+	"version": "1.0.0",
+	"license": "MIT",
+	"description": "Github action to build Docker image and deploy app to k8s in GKE cloud.",
+	"author": {
+		"name": "ITCIG",
+		"email": "it@capinfogroup.com"
+	},
+	"homepage": "https://github.com/itcig/action-deploy-gke#readme",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/itcig/action-deploy-gke.git"
+	},
+	"bugs": {
+		"url": "https://github.com/itcig/itcig/issues"
+	},
+	"keywords": [
+		"actions",
+		"workflows",
+		"build",
+		"deploy",
+		"k8s",
+		"kubernetes"
+	],
+	"extra": {
+		"autotagger": true,
+		"mirror-repo": "itcig/action-deploy-gke"
+	}
+}

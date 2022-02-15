@@ -1,0 +1,195 @@
+# This workflow will build a docker container, publish it to Google Container Registry, and deploy it to GKE when there is a push to the $default-branch branch.
+#
+# For more support on how to run the workflow, please visit
+# https://github.com/google-github-actions/setup-gcloud/tree/master/example-workflows/gke
+
+name: "Deploy to GKE"
+description: "Build Docker image and deploy app to k8s in GKE cloud."
+
+inputs:
+  project-id:
+    description: "The GCP project Id where the k8s cluster is hosted."
+    required: true
+  gke-cluster:
+    description: "The name of the k8s cluster to deploy to."
+    required: true
+  gke-zone:
+    description: "The GKE zone, e.g. 'us-east1-b'."
+    required: true
+  app-slug:
+    description: "The root slug used for all k8s objects, typically the hyphenated hostname e.g. `sitename-com` or `subdomain-mysite-com`."
+    required: true
+  git-repo:
+    description: "The Github repository name."
+    required: true
+  git-branch:
+    description: "The Git branch being pushed to."
+    required: true
+  git-sha:
+    description: "The Git SHA that executed this workflow."
+    required: true
+  gke-service-account-key:
+    description: "JSON key for IAM access to publish on GCR and deploy to GKE."
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set branch-specific deployment variables
+      id: set-vars
+      run: |-
+        # GCR address with repositroy name (minus owner)
+        IMAGE_NAME=$(echo "gcr.io/${inputs.project-id}/${inputs.git-repo#*/}")
+
+        # Convert `/` to `-` and get branch name up to first `_` and lowercase e.g. task/CIG-123_John-Doe -> task-cig-123
+        IMAGE_CONTEXT=$(echo "${${inputs.git-branch//\//-}%%_*}" | tr '[:upper:]' '[:lower:]')
+
+         # Prefix used by Docker tags and k8s objects (including hyphen separator if not empty)
+        if [ "$inputs.git-branch" = "main" || "$inputs.git-branch" = "master" ]; then
+          APP_PREFIX=""
+        else
+          APP_PREFIX="$IMAGE_CONTEXT-"
+        fi
+
+        # Create image tag using prefix + Git short SHA
+        IMAGE_TAG=$(echo "${APP_PREFIX}${GITHUB_SHA:0:7}")
+
+        # Extract variables based on branch name
+        if [ "$inputs.git-branch" = "main" ]; then
+            DEPLOYMENT_ENV="production"
+            NAMESPACE="default"
+
+        elif [ "${inputs.git-branch:0:3}" = "dev" ]; then
+            DEPLOYMENT_ENV="dev"
+            NAMESPACE="dev"
+
+        elif [ "${inputs.git-branch:0:4}" = "stag" ]; then
+            DEPLOYMENT_ENV="staging"
+            NAMESPACE="staging"
+
+        elif [ "${inputs.git-branch:0:5}" = "task/" || "${inputs.git-branch:0:5}" = "feat/" ]; then
+            DEPLOYMENT_ENV="qa"
+            NAMESPACE="qa"
+        fi
+
+        echo "::set-output name=image-name::$IMAGE_NAME"
+        echo "::set-output name=image-tag::$IMAGE_TAG"
+        echo "::set-output name=k8s-namespace::${NAMESPACE}"
+        echo "::set-output name=deployment-env::${DEPLOYMENT_ENV}"
+        echo "::set-output name=app-prefix::${APP_PREFIX}"
+
+    # Setup gcloud CLI
+    - id: "auth"
+      uses: "google-github-actions/auth@v0"
+      with:
+        credentials_json: "${{ inputs.gke-service-account-key }}"
+
+    - name: "Set up Cloud SDK"
+      uses: "google-github-actions/setup-gcloud@v0"
+      with:
+        project_id: ${{ inputs.project-id }}
+
+    # Configure Docker to use the gcloud command-line tool as a credential
+    # helper for authentication
+    - run: |-
+        gcloud auth configure-docker --quiet
+
+    # Get the GKE credentials so we can deploy to the cluster
+    - uses: google-github-actions/get-gke-credentials@v0.2.1
+      with:
+        cluster_name: ${{ inputs.gke-cluster }}
+        location: ${{ inputs.gke-zoen }}
+        credentials: ${{ inputs.gke-service-account-key }}
+
+    # Build the Docker image
+    - name: Build Docker Image
+      env:
+        IMAGE_NAME: ${{ steps.set-vars.outputs.image-name }}
+        IMAGE_TAG: ${{ steps.set-vars.outputs.image-tag }}
+        APP_PREFIX: ${{ steps.set-vars.outputs.app-prefix }}
+      run: |-
+        docker build \
+        --tag "$IMAGE_NAME:$IMAGE_TAG" \
+        --tag "$IMAGE_NAME:${APP_PREFIX}latest" \
+        .
+
+    # Push the Docker image to Google Container Registry
+    - name: Push to Container Registry
+      env:
+        IMAGE_NAME: ${{ steps.set-vars.outputs.image-name }}
+        IMAGE_TAG: ${{ steps.set-vars.outputs.image-tag }}
+        APP_PREFIX: ${{ steps.set-vars.outputs.app-prefix }}
+      run: |-
+        docker push "$IMAGE_NAME:$IMAGE_TAG"
+        docker push "$IMAGE_NAME:${APP_PREFIX}latest"
+
+    # Set up kustomize
+    - name: Set up Kustomize
+      run: |-
+        curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+        mv kustomize /usr/local/bin
+
+    # Deploy the Docker image to the GKE cluster
+    - name: Deploy on GKE
+      env:
+        K8S_NAMESPACE: ${{ steps.set-vars.outputs.k8s-namespace }}
+        DEPLOYMENT_ENV: ${{ steps.set-vars.outputs.deployment-env }}
+        IMAGE_NAME: ${{ steps.set-vars.outputs.image-name }}
+        IMAGE_TAG: ${{ steps.set-vars.outputs.image-tag }}
+        APP_PREFIX: ${{ steps.set-vars.outputs.app-prefix }}
+        APP_SLUG: ${{ inputs.app-slug }}
+      run: |-
+
+        if [ ! -f "deploy/overlays/$DEPLOYMENT_ENV/kustomization.yaml" ]; then
+          echo "No Kustomization config found for '$DEPLOYMENT_ENV' overlay"
+          exit 1
+        fi
+
+        cd "deploy/overlays/$DEPLOYMENT_ENV"
+
+        if [ "$DEPLOYMENT_ENV" = "qa" ]; then
+          cat <<EOF >ingress-patch.json
+          [
+            { "op": "replace", "path": "/spec/rules/0/host", "value": "${APP_PREFIX%-}.qa.cigsecure.com" },
+            { "op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "${APP_PREFIX}${APP_SLUG}" },
+            { "op": "replace", "path": "/spec/tls/0", "value": { "hosts": [ "${APP_PREFIX%-}.qa.cigsecure.com" ], "secretName": "wildcard-qa-cigsecure-com-tls" } }
+          ]
+        EOF
+
+          kustomize edit add patch --kind Ingress --path ingress-patch.json
+
+          kustomize edit add configmap kustomize-template-vars \
+            --from-literal=SERVER_NAME=${APP_PREFIX%-}.qa.cigsecure.com \
+            --from-literal=WP_CACHE_KEY_SALT=${GITHUB_REPOSITORY#*/}-${APP_PREFIX%-}
+        fi
+
+        kustomize edit set image $IMAGE_NAME=$IMAGE_NAME:$IMAGE_TAG
+        kustomize edit set nameprefix "${APP_PREFIX}"
+        kustomize edit set label "app.kubernetes.io/instance:${APP_PREFIX}${APP_SLUG}"
+
+        kubectl apply -k .
+
+    #          kubectl -n ${K8S_NAMESPACE} rollout status deployment/${APP_PREFIX}${APP_SLUG}
+    #          kubectl -n ${K8S_NAMESPACE} get service ${APP_PREFIX}${APP_SLUG} -o wide
+
+    - name: Wait for pods ready
+      uses: itcig/action-wait-for-k8s@v0.1.0
+      with:
+        namespace: ${{ steps.set-vars.outputs.k8s-namespace }}
+        kubectl_args: "pod -l app.kubernetes.io/instance=${{ steps.set-vars.outputs.app-prefix }}${{ inputs.app-slug }}"
+
+    - name: Execute pod commands
+      env:
+        K8S_NAMESPACE: ${{ steps.set-vars.outputs.k8s-namespace }}
+        DEPLOYMENT_ENV: ${{ steps.set-vars.outputs.deployment-env }}
+        APP_PREFIX: ${{ steps.set-vars.outputs.app-prefix }}
+        APP_SLUG: ${{ inputs.app-slug }}
+      run: |-
+        # TODO: move this to a runtime script based on options when the container starts up or a QA-specific Dockerfile
+        if [ "$DEPLOYMENT_ENV" = "qa" ]; then
+          kubectl -n ${K8S_NAMESPACE} exec -i deployment/${APP_PREFIX}${APP_SLUG} -- wp plugin deactivate googleappslogin-enterprise 2>&1 >/dev/null
+        fi
+
+branding:
+  color: green
+  icon: upload-cloud
