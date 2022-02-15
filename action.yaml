@@ -38,15 +38,22 @@ runs:
     - name: Set branch-specific deployment variables
       id: set-vars
       shell: bash
+      env:
+        PROJECT_ID: ${{ inputs.project-id }}
+        GIT_REPO: ${{ inputs.git-repo }}
+        GIT_BRANCH: ${{ inputs.git-branch }}
+        GIT_SHA: ${{ inputs.git-sha }}
+        APP_PREFIX: ${{ steps.set-vars.outputs.app-prefix }}
+        APP_SLUG: ${{ inputs.app-slug }}
       run: |-
-        # GCR address with repositroy name (minus owner)
-        IMAGE_NAME=$(echo "gcr.io/${inputs.project-id}/${inputs.git-repo#*/}")
+        # GCR address with repository name (minus owner)
+        IMAGE_NAME=$(echo "gcr.io/${PROJECT_ID}/${GIT_REPO#*/}")
 
         # Convert `/` to `-` and get branch name up to first `_` and lowercase e.g. task/CIG-123_John-Doe -> task-cig-123
-        IMAGE_CONTEXT=$(echo "${${inputs.git-branch//\//-}%%_*}" | tr '[:upper:]' '[:lower:]')
+        IMAGE_CONTEXT=$(echo "${${GIT_BRANCH//\//-}%%_*}" | tr '[:upper:]' '[:lower:]')
 
          # Prefix used by Docker tags and k8s objects (including hyphen separator if not empty)
-        if [ "$inputs.git-branch" = "main" || "$inputs.git-branch" = "master" ]; then
+        if [ "$GIT_BRANCH" = "main" || "$GIT_BRANCH" = "master" ]; then
           APP_PREFIX=""
         else
           APP_PREFIX="$IMAGE_CONTEXT-"
@@ -56,19 +63,19 @@ runs:
         IMAGE_TAG=$(echo "${APP_PREFIX}${GITHUB_SHA:0:7}")
 
         # Extract variables based on branch name
-        if [ "$inputs.git-branch" = "main" ]; then
+        if [ "$GIT_BRANCH" = "main" ]; then
             DEPLOYMENT_ENV="production"
             NAMESPACE="default"
 
-        elif [ "${inputs.git-branch:0:3}" = "dev" ]; then
+        elif [ "${GIT_BRANCH:0:3}" = "dev" ]; then
             DEPLOYMENT_ENV="dev"
             NAMESPACE="dev"
 
-        elif [ "${inputs.git-branch:0:4}" = "stag" ]; then
+        elif [ "${GIT_BRANCH:0:4}" = "stag" ]; then
             DEPLOYMENT_ENV="staging"
             NAMESPACE="staging"
 
-        elif [ "${inputs.git-branch:0:5}" = "task/" || "${inputs.git-branch:0:5}" = "feat/" ]; then
+        elif [ "${GIT_BRANCH:0:5}" = "task/" || "${GIT_BRANCH:0:5}" = "feat/" ]; then
             DEPLOYMENT_ENV="qa"
             NAMESPACE="qa"
         fi

@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [1.1.1](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.1.0...@itcig/action-deploy-gke@1.1.1) (2022-02-15)
+
+
+### Bug Fixes
+
+* **action-deploy-gke:** improper use of input vars ([2f09cb9](https://github.com/itcig/itcig/commit/2f09cb96bb725a82a6da6c1e699328e13786eb44))
+
+
+
 ## 1.1.0 (2022-02-15)
 
 
