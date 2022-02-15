@@ -111,7 +111,7 @@ runs:
     - uses: google-github-actions/get-gke-credentials@v0.2.1
       with:
         cluster_name: ${{ inputs.gke-cluster }}
-        location: ${{ inputs.gke-zoen }}
+        location: ${{ inputs.gke-zone }}
         credentials: ${{ inputs.gke-service-account-key }}
 
     # Build the Docker image
