@@ -37,6 +37,7 @@ runs:
   steps:
     - name: Set branch-specific deployment variables
       id: set-vars
+      shell: bash
       run: |-
         # GCR address with repositroy name (minus owner)
         IMAGE_NAME=$(echo "gcr.io/${inputs.project-id}/${inputs.git-repo#*/}")
@@ -79,7 +80,7 @@ runs:
         echo "::set-output name=app-prefix::${APP_PREFIX}"
 
     # Setup gcloud CLI
-    - id: "auth"
+    - id: auth
       uses: "google-github-actions/auth@v0"
       with:
         credentials_json: "${{ inputs.gke-service-account-key }}"
@@ -91,7 +92,9 @@ runs:
 
     # Configure Docker to use the gcloud command-line tool as a credential
     # helper for authentication
-    - run: |-
+    - name: Authenticate Docker
+      shell: bash
+      run: |-
         gcloud auth configure-docker --quiet
 
     # Get the GKE credentials so we can deploy to the cluster
@@ -103,6 +106,7 @@ runs:
 
     # Build the Docker image
     - name: Build Docker Image
+      shell: bash
       env:
         IMAGE_NAME: ${{ steps.set-vars.outputs.image-name }}
         IMAGE_TAG: ${{ steps.set-vars.outputs.image-tag }}
@@ -115,6 +119,7 @@ runs:
 
     # Push the Docker image to Google Container Registry
     - name: Push to Container Registry
+      shell: bash
       env:
         IMAGE_NAME: ${{ steps.set-vars.outputs.image-name }}
         IMAGE_TAG: ${{ steps.set-vars.outputs.image-tag }}
@@ -125,12 +130,14 @@ runs:
 
     # Set up kustomize
     - name: Set up Kustomize
+      shell: bash
       run: |-
         curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
         mv kustomize /usr/local/bin
 
     # Deploy the Docker image to the GKE cluster
     - name: Deploy on GKE
+      shell: bash
       env:
         K8S_NAMESPACE: ${{ steps.set-vars.outputs.k8s-namespace }}
         DEPLOYMENT_ENV: ${{ steps.set-vars.outputs.deployment-env }}
@@ -179,6 +186,7 @@ runs:
         kubectl_args: "pod -l app.kubernetes.io/instance=${{ steps.set-vars.outputs.app-prefix }}${{ inputs.app-slug }}"
 
     - name: Execute pod commands
+      shell: bash
       env:
         K8S_NAMESPACE: ${{ steps.set-vars.outputs.k8s-namespace }}
         DEPLOYMENT_ENV: ${{ steps.set-vars.outputs.deployment-env }}
