@@ -49,8 +49,11 @@ runs:
         # GCR address with repository name (minus owner)
         IMAGE_NAME=$(echo "gcr.io/${PROJECT_ID}/${GIT_REPO#*/}")
 
-        # Convert `/` to `-` and get branch name up to first `_` and lowercase e.g. task/CIG-123_John-Doe -> task-cig-123
-        IMAGE_CONTEXT=$(echo "${${GIT_BRANCH//\//-}%%_*}" | tr '[:upper:]' '[:lower:]')
+        # Convert `/` to `-` in branch name
+        GIT_BRANCH_NO_SLASH=${GIT_BRANCH//\//-}
+
+        # Get branch name up to first `_` and lowercase e.g. task/CIG-123_John-Doe -> task-cig-123
+        IMAGE_CONTEXT=$(echo "${GIT_BRANCH_NO_SLASH%%_*}" | tr '[:upper:]' '[:lower:]')
 
          # Prefix used by Docker tags and k8s objects (including hyphen separator if not empty)
         if [ "$GIT_BRANCH" = "main" || "$GIT_BRANCH" = "master" ]; then
