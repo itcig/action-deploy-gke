@@ -17,7 +17,7 @@ inputs:
     description: "The GKE zone, e.g. 'us-east1-b'."
     required: true
   app-slug:
-    description: "The root slug used for all k8s objects, typically the hyphenated hostname e.g. `sitename-com` or `subdomain-mysite-com`."
+    description: "The root slug used for all k8s objects, typically the hyphenated hostname e.g. 'sitename-com' or 'subdomain-mysite-com'."
     required: true
   git-repo:
     description: "The Github repository name."
@@ -49,10 +49,10 @@ runs:
         # GCR address with repository name (minus owner)
         IMAGE_NAME=$(echo "gcr.io/${PROJECT_ID}/${GIT_REPO#*/}")
 
-        # Convert `/` to `-` in branch name
+        # Convert '/' to '-' in branch name
         GIT_BRANCH_NO_SLASH=${GIT_BRANCH//\//-}
 
-        # Get branch name up to first `_` and lowercase e.g. task/CIG-123_John-Doe -> task-cig-123
+        # Get branch name up to first '_' and lowercase e.g. task/CIG-123_John-Doe -> task-cig-123
         IMAGE_CONTEXT=$(echo "${GIT_BRANCH_NO_SLASH%%_*}" | tr '[:upper:]' '[:lower:]')
 
          # Prefix used by Docker tags and k8s objects (including hyphen separator if not empty)
@@ -78,7 +78,7 @@ runs:
             DEPLOYMENT_ENV="staging"
             NAMESPACE="staging"
 
-        elif [ "${GIT_BRANCH:0:5}" = "task/" || "${GIT_BRANCH:0:5}" = "feat/" ]; then
+        elif [ "${GIT_BRANCH:0:5}" = "task/" ] || [ "${GIT_BRANCH:0:5}" = "feat/" ]; then
             DEPLOYMENT_ENV="qa"
             NAMESPACE="qa"
         fi
