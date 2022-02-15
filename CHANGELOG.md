@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.0](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.1.4...@itcig/action-deploy-gke@1.2.0) (2022-02-15)
+
+
+### Features
+
+* **action-deploy-gke:** remove nameprefix from objects ([febf6e9](https://github.com/itcig/itcig/commit/febf6e984224671bb3e1af7b429a5a3e02f764be))
+
+
+
 ### [1.1.4](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.1.3...@itcig/action-deploy-gke@1.1.4) (2022-02-15)
 
 

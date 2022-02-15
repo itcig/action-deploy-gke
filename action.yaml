@@ -178,10 +178,14 @@ runs:
           kustomize edit add configmap kustomize-template-vars \
             --from-literal=SERVER_NAME=${APP_PREFIX%-}.qa.cigsecure.com \
             --from-literal=WP_CACHE_KEY_SALT=${GITHUB_REPOSITORY#*/}-${APP_PREFIX%-}
+
+          # Only prefix containers in qa, otherwise we use the namespace to differentiate between app environments
+          kustomize edit set nameprefix "${APP_PREFIX}"
         fi
 
         kustomize edit set image $IMAGE_NAME=$IMAGE_NAME:$IMAGE_TAG
-        kustomize edit set nameprefix "${APP_PREFIX}"
+
+        # Create unique selector labels used to join pods and services
         kustomize edit set label "app.kubernetes.io/instance:${APP_PREFIX}${APP_SLUG}"
 
         kubectl apply -k .
