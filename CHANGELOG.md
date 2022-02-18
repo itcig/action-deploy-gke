@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.0](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.4.3...@itcig/action-deploy-gke@1.5.0) (2022-02-18)
+
+
+### Features
+
+* **action-deploy-gke:** augment QA hostname ([0053f1f](https://github.com/itcig/itcig/commit/0053f1fc71ba0c8caebecb97bc4feb204917a3dc))
+
+
+
 ### [1.4.3](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.4.2...@itcig/action-deploy-gke@1.4.3) (2022-02-18)
 
 
