@@ -185,8 +185,8 @@ runs:
         cd "deploy/overlays/$OVERLAY"
 
         # Prefix all variant objects to differentiate between them in the same namespace
-        if [ -z "$APP_VARIANT" ]; then
-          kustomize edit set nameprefix "$APP_VARIANT"
+        if [ ! -z "$APP_VARIANT" ]; then
+          kustomize edit set nameprefix "$APP_VARIANT-"
         fi
 
         if [ "$DEPLOYMENT_ENV" == "qa" ]; then
@@ -199,7 +199,7 @@ runs:
           [
             { "op": "replace", "path": "/spec/rules/0/host", "value": "$QA_HOSTNAME" },
             { "op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "${APP_PREFIX}${APP_SLUG}" },
-            { "op": "replace", "path": "/spec/tls/0", "value": { "hosts": [ "QA_HOSTNAME" ], "secretName": "wildcard-qa-cigsecure-com-tls" } }
+            { "op": "replace", "path": "/spec/tls/0", "value": { "hosts": [ "$QA_HOSTNAME" ], "secretName": "wildcard-qa-cigsecure-com-tls" } }
           ]
         EOF
 
