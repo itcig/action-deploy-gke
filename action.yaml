@@ -54,7 +54,7 @@ runs:
         IMAGE_NAME: ${{ inputs.docker-image-name }}
       run: |-
         # GCR address with repository name (minus owner)
-        IMAGE_NAME=${IMAGE_NAME:-$(echo "gcr.io/${PROJECT_ID}/${GIT_REPO#*/}")}
+        IMAGE_NAME=$(echo ${IMAGE_NAME:-"gcr.io/${PROJECT_ID}/${GIT_REPO#*/}"} | tr '[:upper:]' '[:lower:]')
 
         # Convert '/' to '-' in branch name
         GIT_BRANCH_NO_SLASH=${GIT_BRANCH//\//-}

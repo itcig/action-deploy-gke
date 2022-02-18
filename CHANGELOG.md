@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [1.4.2](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.4.1...@itcig/action-deploy-gke@1.4.2) (2022-02-18)
+
+
+### Bug Fixes
+
+* **action-deploy-gke:** lowercase Docker image name ([0315c19](https://github.com/itcig/itcig/commit/0315c1900ab4b36cfe28d915fdb8124c8a33dd70))
+
+
+
 ### [1.4.1](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.4.0...@itcig/action-deploy-gke@1.4.1) (2022-02-18)
 
 **Note:** Version bump only for package @itcig/action-deploy-gke
