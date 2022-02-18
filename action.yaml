@@ -63,7 +63,7 @@ runs:
         IMAGE_CONTEXT=$(echo "${GIT_BRANCH_NO_SLASH%%_*}" | tr '[:upper:]' '[:lower:]')
 
          # Prefix used by Docker tags and k8s objects (including hyphen separator if not empty)
-        if [ "$GIT_BRANCH" = "main" || "$GIT_BRANCH" = "master" ]; then
+        if [ "$GIT_BRANCH" == "main" ] || [ "$GIT_BRANCH" == "master" ]; then
           APP_PREFIX=""
         else
           APP_PREFIX="$IMAGE_CONTEXT-"
@@ -71,26 +71,26 @@ runs:
 
         # Used for when deploying multiple instances of the same app in the same environment (like per division)
         if [ ! -z "$APP_VARIANT" ]; then
-          APP_PREFIX = "${APP_PREFIX}${APP_VARIANT}-"
+          APP_PREFIX="${APP_PREFIX}${APP_VARIANT}-"
         fi
 
         # Create image tag using prefix + Git short SHA
         IMAGE_TAG=$(echo "${APP_PREFIX}${GITHUB_SHA:0:7}")
 
         # Extract variables based on branch name
-        if [ "$GIT_BRANCH" = "main" ]; then
+        if [ "$GIT_BRANCH" == "main" ]; then
             DEPLOYMENT_ENV="production"
             NAMESPACE="default"
 
-        elif [ "${GIT_BRANCH:0:3}" = "dev" ]; then
+        elif [ "${GIT_BRANCH:0:3}" == "dev" ]; then
             DEPLOYMENT_ENV="dev"
             NAMESPACE="dev"
 
-        elif [ "${GIT_BRANCH:0:4}" = "stag" ]; then
+        elif [ "${GIT_BRANCH:0:4}" == "stag" ]; then
             DEPLOYMENT_ENV="staging"
             NAMESPACE="staging"
 
-        elif [ "${GIT_BRANCH:0:5}" = "task/" ] || [ "${GIT_BRANCH:0:5}" = "feat/" ]; then
+        elif [ "${GIT_BRANCH:0:5}" == "task/" ] || [ "${GIT_BRANCH:0:5}" == "feat/" ]; then
             DEPLOYMENT_ENV="qa"
             NAMESPACE="qa"
         fi
@@ -189,7 +189,7 @@ runs:
           kustomize edit set nameprefix "$APP_VARIANT"
         fi
 
-        if [ "$DEPLOYMENT_ENV" = "qa" ]; then
+        if [ "$DEPLOYMENT_ENV" == "qa" ]; then
 
           # Specify a custom hostname for QA that matches our wildcard system branch|ticket[-variant].qa.cigsecure.com
           # Remove trailing hypen to use app prefix as subdomain
@@ -238,7 +238,7 @@ runs:
         APP_SLUG: ${{ inputs.app-slug }}
       run: |-
         # TODO: move this to a runtime script based on options when the container starts up or a QA-specific Dockerfile
-        if [ "$DEPLOYMENT_ENV" = "qa" ]; then
+        if [ "$DEPLOYMENT_ENV" == "qa" ]; then
           kubectl -n ${K8S_NAMESPACE} exec -i deployment/${APP_PREFIX}${APP_SLUG} -- wp plugin deactivate googleappslogin-enterprise 2>&1 >/dev/null
         fi
 
