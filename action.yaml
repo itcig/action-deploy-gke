@@ -19,6 +19,9 @@ inputs:
   app-slug:
     description: "The root slug used for all k8s objects, typically the hyphenated hostname e.g. 'sitename-com' or 'subdomain-mysite-com'."
     required: true
+  app-variant:
+    description: "If deploying multiple versions of the same code, you can specify an additional variant beyond the slug e.g. 'division' or 'v2'"
+    required: false
   git-repo:
     description: "The Github repository name."
     required: true
@@ -31,6 +34,9 @@ inputs:
   gke-service-account-key:
     description: "JSON key for IAM access to publish on GCR and deploy to GKE."
     required: true
+  docker-image-name:
+    description: "Specify a custom Docker image name instead of using the default GCR + Github repo name"
+    required: false
 
 runs:
   using: composite
@@ -43,11 +49,12 @@ runs:
         GIT_REPO: ${{ inputs.git-repo }}
         GIT_BRANCH: ${{ inputs.git-branch }}
         GIT_SHA: ${{ inputs.git-sha }}
-        APP_PREFIX: ${{ steps.set-vars.outputs.app-prefix }}
+        APP_VARIANT: ${{ inputs.app-variant }}
         APP_SLUG: ${{ inputs.app-slug }}
+        IMAGE_NAME: ${ inputs.docker-image-name }}
       run: |-
         # GCR address with repository name (minus owner)
-        IMAGE_NAME=$(echo "gcr.io/${PROJECT_ID}/${GIT_REPO#*/}")
+        IMAGE_NAME=${IMAGE_NAME:-$(echo "gcr.io/${PROJECT_ID}/${GIT_REPO#*/}")}
 
         # Convert '/' to '-' in branch name
         GIT_BRANCH_NO_SLASH=${GIT_BRANCH//\//-}
@@ -60,6 +67,11 @@ runs:
           APP_PREFIX=""
         else
           APP_PREFIX="$IMAGE_CONTEXT-"
+        fi
+
+        # Used for when deploying multiple instances of the same app in the same environment (like per division)
+        if [ ! -z $APP_VARIANT ]; then
+          APP_PREFIX = "${APP_PREFIX}${APP_VARIANT}-"
         fi
 
         # Create image tag using prefix + Git short SHA
@@ -157,19 +169,31 @@ runs:
         APP_SLUG: ${{ inputs.app-slug }}
       run: |-
 
-        if [ ! -f "deploy/overlays/$DEPLOYMENT_ENV/kustomization.yaml" ]; then
+        # Set Kustomize
+        if [ -z $APP_VARIANT ]; then
+          OVERLAY=$DEPLOYMENT_ENV
+        else
+          OVERLAY="$DEPLOYMENT_ENV-$APP_VARIANT"
+        fi
+
+        if [ ! -f "deploy/overlays/$OVERLAY/kustomization.yaml" ]; then
           echo "No Kustomization config found for '$DEPLOYMENT_ENV' overlay"
           exit 1
         fi
 
-        cd "deploy/overlays/$DEPLOYMENT_ENV"
+        cd "deploy/overlays/$OVERLAY"
 
         if [ "$DEPLOYMENT_ENV" = "qa" ]; then
+
+          # Specify a custom hostname for QA that matches our wildcard system branch|ticket[-variant].qa.cigsecure.com
+          # Remove trailing hypen to use app prefix as subdomain
+          QA_HOSTNAME="${APP_PREFIX%-}.qa.cigsecure.com"
+
           cat <<EOF >ingress-patch.json
           [
-            { "op": "replace", "path": "/spec/rules/0/host", "value": "${APP_PREFIX%-}.qa.cigsecure.com" },
+            { "op": "replace", "path": "/spec/rules/0/host", "value": "$QA_HOSTNAME" },
             { "op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "${APP_PREFIX}${APP_SLUG}" },
-            { "op": "replace", "path": "/spec/tls/0", "value": { "hosts": [ "${APP_PREFIX%-}.qa.cigsecure.com" ], "secretName": "wildcard-qa-cigsecure-com-tls" } }
+            { "op": "replace", "path": "/spec/tls/0", "value": { "hosts": [ "QA_HOSTNAME" ], "secretName": "wildcard-qa-cigsecure-com-tls" } }
           ]
         EOF
 
@@ -177,7 +201,7 @@ runs:
 
           kustomize edit add configmap kustomize-template-vars \
             --from-literal=SERVER_NAME=${APP_PREFIX%-}.qa.cigsecure.com \
-            --from-literal=WP_CACHE_KEY_SALT=${GITHUB_REPOSITORY#*/}-${APP_PREFIX%-}
+            --from-literal=WP_CACHE_KEY_SALT=${APP_PREFIX}${APP_SLUG}
 
           # Only prefix containers in qa, otherwise we use the namespace to differentiate between app environments
           kustomize edit set nameprefix "${APP_PREFIX}"

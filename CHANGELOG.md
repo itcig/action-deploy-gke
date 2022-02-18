@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.3.0](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.2.0...@itcig/action-deploy-gke@1.3.0) (2022-02-18)
+
+
+### Features
+
+* **action-deploy-gke:** deploy multiple variants of an app per env ([a1eb696](https://github.com/itcig/itcig/commit/a1eb6962de36d733f143f5f04a7f5ffd1057e6cc))
+
+
+
 ## [1.2.0](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.1.4...@itcig/action-deploy-gke@1.2.0) (2022-02-15)
 
 
