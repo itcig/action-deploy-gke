@@ -51,7 +51,7 @@ runs:
         GIT_SHA: ${{ inputs.git-sha }}
         APP_VARIANT: ${{ inputs.app-variant }}
         APP_SLUG: ${{ inputs.app-slug }}
-        IMAGE_NAME: ${ inputs.docker-image-name }}
+        IMAGE_NAME: ${{ inputs.docker-image-name }}
       run: |-
         # GCR address with repository name (minus owner)
         IMAGE_NAME=${IMAGE_NAME:-$(echo "gcr.io/${PROJECT_ID}/${GIT_REPO#*/}")}
@@ -70,7 +70,7 @@ runs:
         fi
 
         # Used for when deploying multiple instances of the same app in the same environment (like per division)
-        if [ ! -z $APP_VARIANT ]; then
+        if [ ! -z "$APP_VARIANT" ]; then
           APP_PREFIX = "${APP_PREFIX}${APP_VARIANT}-"
         fi
 
@@ -167,10 +167,11 @@ runs:
         IMAGE_TAG: ${{ steps.set-vars.outputs.image-tag }}
         APP_PREFIX: ${{ steps.set-vars.outputs.app-prefix }}
         APP_SLUG: ${{ inputs.app-slug }}
+        APP_VARIANT: ${{ inputs.app-variant }}
       run: |-
 
         # Set Kustomize
-        if [ -z $APP_VARIANT ]; then
+        if [ -z "$APP_VARIANT" ]; then
           OVERLAY=$DEPLOYMENT_ENV
         else
           OVERLAY="$DEPLOYMENT_ENV-$APP_VARIANT"
@@ -182,6 +183,11 @@ runs:
         fi
 
         cd "deploy/overlays/$OVERLAY"
+
+        # Prefix all variant objects to differentiate between them in the same namespace
+        if [ -z "$APP_VARIANT" ]; then
+          kustomize edit set nameprefix "$APP_VARIANT"
+        fi
 
         if [ "$DEPLOYMENT_ENV" = "qa" ]; then
 
@@ -203,8 +209,8 @@ runs:
             --from-literal=SERVER_NAME=${APP_PREFIX%-}.qa.cigsecure.com \
             --from-literal=WP_CACHE_KEY_SALT=${APP_PREFIX}${APP_SLUG}
 
-          # Only prefix containers in qa, otherwise we use the namespace to differentiate between app environments
-          kustomize edit set nameprefix "${APP_PREFIX}"
+          # Sepcial prefix for containers in qa to differentiate between all the instances
+          kustomize edit set nameprefix "$APP_PREFIX"
         fi
 
         kustomize edit set image $IMAGE_NAME=$IMAGE_NAME:$IMAGE_TAG

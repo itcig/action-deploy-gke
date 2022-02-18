@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.4.0](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.3.0...@itcig/action-deploy-gke@1.4.0) (2022-02-18)
+
+
+### Features
+
+* **action-deploy-gke:** prefix all objects if variant ([72c6052](https://github.com/itcig/itcig/commit/72c60525569198d1ee966094328f9278981c85f2))
+
+
+### Bug Fixes
+
+* **action-deploy-gke:** syntax error ([c5e2d65](https://github.com/itcig/itcig/commit/c5e2d65913c99275f3c48fddcd277e82aec227ab))
+
+
+
 ## [1.3.0](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.2.0...@itcig/action-deploy-gke@1.3.0) (2022-02-18)
 
 
