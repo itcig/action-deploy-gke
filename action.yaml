@@ -193,7 +193,7 @@ runs:
 
           # Specify a custom hostname for QA that matches our wildcard system branch|ticket[-variant]-image_name_suffix.qa.cigsecure.com
           # Remove trailing hypen to use app prefix as subdomain
-          QA_HOSTNAME="${APP_PREFIX}${IMAGE_NAME#*/}.qa.cigsecure.com"
+          QA_HOSTNAME="${APP_PREFIX}${IMAGE_NAME##*/}.qa.cigsecure.com"
 
           cat <<EOF >ingress-patch.json
           [
