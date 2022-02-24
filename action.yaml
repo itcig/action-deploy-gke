@@ -239,7 +239,7 @@ runs:
       run: |-
         # TODO: move this to a runtime script based on options when the container starts up or a QA-specific Dockerfile
         if [ "$DEPLOYMENT_ENV" == "qa" ]; then
-          kubectl -n ${K8S_NAMESPACE} exec -i deployment/${APP_PREFIX}${APP_SLUG} -- wp plugin deactivate googleappslogin-enterprise 2>&1 >/dev/null
+          kubectl -n "${K8S_NAMESPACE}" exec "deployment.apps/${APP_PREFIX}${APP_SLUG}" -- wp plugin deactivate googleappslogin-enterprise 2> /dev/null
         fi
 
 branding:

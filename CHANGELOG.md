@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [1.5.5](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.5.4...@itcig/action-deploy-gke@1.5.5) (2022-02-24)
+
+
+### Bug Fixes
+
+* **action-deploy-gke:** suppress warnings with wp-cli command ([5e09798](https://github.com/itcig/itcig/commit/5e0979819694efbc8fb0bf2584323fe597aa4f8b))
+
+
+
 ### [1.5.4](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.5.3...@itcig/action-deploy-gke@1.5.4) (2022-02-24)
 
 
