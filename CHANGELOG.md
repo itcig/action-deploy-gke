@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [1.5.3](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.5.2...@itcig/action-deploy-gke@1.5.3) (2022-02-24)
+
+
+### Bug Fixes
+
+* **action-deploy-gke:** error with QA hostname ([087a2fd](https://github.com/itcig/itcig/commit/087a2fdf9f9376ec8a29b6f18ddd16c3700c65ea))
+
+
+
 ### [1.5.2](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.5.1...@itcig/action-deploy-gke@1.5.2) (2022-02-23)
 
 **Note:** Version bump only for package @itcig/action-deploy-gke
