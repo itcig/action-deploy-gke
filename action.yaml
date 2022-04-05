@@ -95,11 +95,20 @@ runs:
             NAMESPACE="qa"
         fi
 
+        # Establish if repo is Wordpress or not based on the repo name containing `wp-`
+        # TODO: This is a temporary fix we should be passing this information in explicitly or moving the customizations out
+        IS_WORDPRESS=false
+
+        if [[ "${GIT_REPO#*/}" == *"wp-"* ]]; then
+          IS_WORDPRESS=true
+        fi
+
         echo "::set-output name=image-name::$IMAGE_NAME"
         echo "::set-output name=image-tag::$IMAGE_TAG"
         echo "::set-output name=k8s-namespace::${NAMESPACE}"
         echo "::set-output name=deployment-env::${DEPLOYMENT_ENV}"
         echo "::set-output name=app-prefix::${APP_PREFIX}"
+        echo "::set-output name=is-wordpress::${IS_WORDPRESS}"
 
     # Setup gcloud CLI
     - id: auth
@@ -236,9 +245,10 @@ runs:
         DEPLOYMENT_ENV: ${{ steps.set-vars.outputs.deployment-env }}
         APP_PREFIX: ${{ steps.set-vars.outputs.app-prefix }}
         APP_SLUG: ${{ inputs.app-slug }}
+        IS_WORDPRESS: ${{ steps.set-vars.outputs.is-wordpress }}
       run: |-
         # TODO: move this to a runtime script based on options when the container starts up or a QA-specific Dockerfile
-        if [ "$DEPLOYMENT_ENV" == "qa" ]; then
+        if [ "$DEPLOYMENT_ENV" == "qa" ] && [ "$IS_WORDPRESS" = true ]; then
           kubectl -n "${K8S_NAMESPACE}" exec "deployment.apps/${APP_PREFIX}${APP_SLUG}" -- wp plugin deactivate googleappslogin-enterprise 2> /dev/null
         fi
 

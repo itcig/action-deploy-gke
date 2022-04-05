@@ -1,6 +1,6 @@
 {
 	"name": "@itcig/action-deploy-gke",
-	"version": "1.5.6",
+	"version": "1.6.0",
 	"license": "MIT",
 	"description": "Github action to build Docker image and deploy app to k8s in GKE cloud.",
 	"author": {

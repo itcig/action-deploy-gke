@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.6.0](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.5.6...@itcig/action-deploy-gke@1.6.0) (2022-04-05)
+
+
+### Features
+
+* **action-deploy-gke:** check for is_wordpress ([3fc4349](https://github.com/itcig/itcig/commit/3fc4349d62aca5097fe8f4e8ec673e9837c18d67))
+
+
+
 ### 1.5.6 (2022-03-08)
 
 **Note:** Version bump only for package @itcig/action-deploy-gke
