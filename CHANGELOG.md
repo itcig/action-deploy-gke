@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.7.0](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.6.0...@itcig/action-deploy-gke@1.7.0) (2022-05-25)
+
+
+### Features
+
+* **action-deploy-gke:** use image sha, not tag ([900fd25](https://github.com/itcig/itcig/commit/900fd25784884f795f06acd177be3a1ad4003ee4))
+
+
+
 ## [1.6.0](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.5.6...@itcig/action-deploy-gke@1.6.0) (2022-04-05)
 
 

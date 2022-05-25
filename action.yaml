@@ -150,6 +150,7 @@ runs:
 
     # Push the Docker image to Google Container Registry
     - name: Push to Container Registry
+      id: docker-push
       shell: bash
       env:
         IMAGE_NAME: ${{ steps.set-vars.outputs.image-name }}
@@ -158,6 +159,11 @@ runs:
       run: |-
         docker push "$IMAGE_NAME:$IMAGE_TAG"
         docker push "$IMAGE_NAME:${APP_PREFIX}latest"
+
+        # Get newly pushed docker image SHA from registry to use in deployment
+        IMAGE_SHA="${$(docker inspect --format='{{index .RepoDigests 0}}' $IMAGE_NAME:$IMAGE_TAG)##$IMAGE_NAME@sha256:}"
+
+        echo "::set-output name=image-sha::IMAGE_SHA"
 
     # Set up kustomize
     - name: Set up Kustomize
@@ -174,6 +180,7 @@ runs:
         DEPLOYMENT_ENV: ${{ steps.set-vars.outputs.deployment-env }}
         IMAGE_NAME: ${{ steps.set-vars.outputs.image-name }}
         IMAGE_TAG: ${{ steps.set-vars.outputs.image-tag }}
+        IMAGE_SHA: ${{ steps.docker-push.outputs.image-sha }}
         APP_PREFIX: ${{ steps.set-vars.outputs.app-prefix }}
         APP_SLUG: ${{ inputs.app-slug }}
         APP_VARIANT: ${{ inputs.app-variant }}
@@ -222,7 +229,7 @@ runs:
           kustomize edit set nameprefix "$APP_PREFIX"
         fi
 
-        kustomize edit set image $IMAGE_NAME=$IMAGE_NAME:$IMAGE_TAG
+        kustomize edit set image $IMAGE_NAME=$IMAGE_NAME@sha256:$IMAGE_SHA
 
         # Create unique selector labels used to join pods and services
         kustomize edit set label "app.kubernetes.io/instance:${APP_PREFIX}${APP_SLUG}"
