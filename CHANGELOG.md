@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [1.7.1](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.7.0...@itcig/action-deploy-gke@1.7.1) (2022-06-01)
+
+
+### Bug Fixes
+
+* bash syntax ([#27](https://github.com/itcig/itcig/issues/27)) ([7e6233c](https://github.com/itcig/itcig/commit/7e6233c5a9237cdc38c5a685a64e81e8fb32ab76))
+
+
+
 ## [1.7.0](https://github.com/itcig/itcig/compare/@itcig/action-deploy-gke@1.6.0...@itcig/action-deploy-gke@1.7.0) (2022-05-25)
 
 

@@ -161,9 +161,11 @@ runs:
         docker push "$IMAGE_NAME:${APP_PREFIX}latest"
 
         # Get newly pushed docker image SHA from registry to use in deployment
-        IMAGE_SHA="${$(docker inspect --format='{{index .RepoDigests 0}}' $IMAGE_NAME:$IMAGE_TAG)##$IMAGE_NAME@sha256:}"
+        FULL_IMAGE_NAME="$(docker inspect --format='{{index .RepoDigests 0}}' $IMAGE_NAME:$IMAGE_TAG)"
 
-        echo "::set-output name=image-sha::IMAGE_SHA"
+        IMAGE_SHA="${FULL_IMAGE_NAME##IMAGE_NAME@sha256:}"
+
+        echo "::set-output name=image-sha::$IMAGE_SHA"
 
     # Set up kustomize
     - name: Set up Kustomize
