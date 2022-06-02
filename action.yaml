@@ -163,7 +163,7 @@ runs:
         # Get newly pushed docker image SHA from registry to use in deployment
         FULL_IMAGE_NAME="$(docker inspect --format='{{index .RepoDigests 0}}' $IMAGE_NAME:$IMAGE_TAG)"
 
-        IMAGE_SHA="${FULL_IMAGE_NAME##IMAGE_NAME@sha256:}"
+        IMAGE_SHA="${FULL_IMAGE_NAME##$IMAGE_NAME@sha256:}"
 
         echo "::set-output name=image-sha::$IMAGE_SHA"
 
